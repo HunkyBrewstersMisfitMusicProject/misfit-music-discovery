@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Data / outputs (keep repo lean; regenerate locally)
+data/
+*.wav
+*.mp3
+*.flac
+
+# Editor / OS
+.DS_Store
+*.swp
+.idea/

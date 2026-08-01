@@ -1,0 +1,16 @@
+[project]
+name = "mmp"
+version = "0.1.0"
+description = "Misfit Music Project — free, offline local audio toolkit"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+mmp = "mmp.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mmp"]
