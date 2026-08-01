@@ -7,6 +7,7 @@ import sys
 from . import audio
 from . import manifest as manifest_mod
 from . import index as index_mod
+from . import audio_features as af
 from . import __version__
 
 
@@ -53,6 +54,33 @@ def main(argv=None):
     pib.add_argument("--location", help="filter by location (substring, ci)")
     pib.add_argument("--name", help="filter by name (substring, ci)")
     pib.add_argument("--curator", help="filter by curator name (substring, ci)")
+
+    # --- listener: library (profile a local music folder) ---
+    pl = sub.add_parser("library", help="Profile a local music folder by sound")
+    pl.add_argument("folder", help="path to local audio files")
+    pl.add_argument("--out", help="write library profile JSON to this path")
+
+    # --- listener: similar (sound-match a track to registry artists) ---
+    ps = sub.add_parser("similar", help="Find registry artists whose SOUND "
+                                      "matches a reference track")
+    ps.add_argument("track", help="reference audio file (your local track)")
+    ps.add_argument("--registry",
+                    default="file:///home/misfitmusicproject/misfit-music/seed-registry.json",
+                    help="registry URL or file:// path")
+    ps.add_argument("--top", type=int, default=5, help="how many to return")
+
+    # --- listener: export (portable playlist of matched artists) ---
+    pe = sub.add_parser("export", help="Export matched artists as a portable "
+                                      "playlist to import into YOUR service")
+    pe.add_argument("track", help="reference audio file")
+    pe.add_argument("--registry",
+                    default="file:///home/misfitmusicproject/misfit-music/seed-registry.json",
+                    help="registry URL or file:// path")
+    pe.add_argument("--service", default="generic",
+                    choices=["generic", "m3u", "csv"],
+                    help="export format (generic=JSON+M3U+CSV, all host-neutral)")
+    pe.add_argument("--top", type=int, default=10)
+    pe.add_argument("--out", required=True, help="output base path (no ext)")
 
     args = p.parse_args(argv)
 
@@ -119,6 +147,94 @@ def main(argv=None):
         for e in idx["errors"]:
             print(f"  ! error {e['url']}: {e['reason']}", file=sys.stderr)
         return 0
+
+    if args.cmd == "library":
+        try:
+            import os
+            vecs = {}
+            for root, _, files in os.walk(args.folder):
+                for fn in files:
+                    if fn.lower().endswith((".wav", ".mp3", ".flac", ".ogg")):
+                        fp = os.path.join(root, fn)
+                        try:
+                            vecs[fp] = af.extract_features(fp)
+                        except Exception as ex:
+                            print(f"  ! skip {fp}: {ex}", file=sys.stderr)
+            if not vecs:
+                print("No audio files found / decoded.", file=sys.stderr)
+                return 1
+            # library profile = mean vector over its tracks
+            mean_vec = af.mean_vectors(list(vecs.values()))
+            profile = {
+                "folder": args.folder,
+                "tracks": len(vecs),
+                "profile_vector": mean_vec.tolist(),
+            }
+            if args.out:
+                with open(args.out, "w", encoding="utf-8") as fh:
+                    json.dump(profile, fh, indent=2)
+                print(f"wrote library profile -> {args.out} ({len(vecs)} tracks)")
+            else:
+                print(json.dumps(profile, indent=2))
+            return 0
+        except Exception as e:
+            print(f"FAILED library: {e}", file=sys.stderr)
+            return 1
+
+    if args.cmd == "similar":
+        try:
+            ref = af.extract_features(args.track)
+            idx = index_mod.build_index(args.registry)
+            items = [(a["name"], af.artist_vec(a)) for a in idx["artists"]]
+            ranked = af.rank_by_similarity(ref, items)[: args.top]
+            print(f"reference: {args.track}")
+            print(f"sound-similar artists (timbre/texture match):")
+            for name, score in ranked:
+                a = next(x for x in idx["artists"] if x["name"] == name)
+                links = " ".join(l["url"] for l in a.get("links", []))
+                print(f"  - {name}  [score {score:.3f}]  {links}")
+            return 0
+        except Exception as e:
+            print(f"FAILED similar: {e}", file=sys.stderr)
+            return 1
+
+    if args.cmd == "export":
+        try:
+            ref = af.extract_features(args.track)
+            idx = index_mod.build_index(args.registry)
+            items = [(a["name"], af.artist_vec(a)) for a in idx["artists"]]
+            ranked = af.rank_by_similarity(ref, items)[: args.top]
+            entries = []
+            for name, score in ranked:
+                a = next(x for x in idx["artists"] if x["name"] == name)
+                entries.append({
+                    "name": name,
+                    "score": round(score, 3),
+                    "location": a.get("location"),
+                    "links": a.get("links", []),
+                })
+            # generic JSON
+            with open(args.out + ".json", "w", encoding="utf-8") as fh:
+                json.dump({"source_track": args.track, "artists": entries},
+                          fh, indent=2)
+            # M3U (host-neutral: points to artist's OWN links, not our hosting)
+            with open(args.out + ".m3u", "w", encoding="utf-8") as fh:
+                fh.write("#EXTM3U\n")
+                for e in entries:
+                    url = (e["links"][0]["url"] if e["links"] else "")
+                    fh.write(f"#EXTINF:-1,{e['name']}\n{url}\n")
+            # CSV for importers (Soundiiz/TuneMyMusic-style)
+            with open(args.out + ".csv", "w", encoding="utf-8") as fh:
+                fh.write("artist,score,location,link\n")
+                for e in entries:
+                    url = (e["links"][0]["url"] if e["links"] else "")
+                    fh.write(f"{e['name']},{e['score']},{e['location'] or ''},{url}\n")
+            print(f"exported {len(entries)} artists -> {args.out}.(json|m3u|csv)")
+            print("Import the .m3u or .csv into YOUR service. We host nothing.")
+            return 0
+        except Exception as e:
+            print(f"FAILED export: {e}", file=sys.stderr)
+            return 1
 
     p.print_help()
     return 1
