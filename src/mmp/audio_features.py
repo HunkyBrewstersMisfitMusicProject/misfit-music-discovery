@@ -29,38 +29,44 @@ def _decode_pcm(path, sr=22050):
 def _frame_features(samples, sr, frame=1024, hop=512):
     n = len(samples)
     feats = []
-    i = 0
-    while i + frame <= n:
+    # semitone center frequencies (log-spaced) for a 12-bin chroma
+    midi = np.arange(24, 96)  # C1..B6
+    fc = 440.0 * 2 ** ((midi - 69) / 12.0)
+    for i in range(0, n - frame, hop):
         seg = samples[i:i + frame]
-        i += hop
         if seg.shape[0] < frame:
             break
-        # window
         w = seg * np.hanning(frame)
-        spec = np.abs(np.fft.rfft(w))
+        spec = np.abs(np.fft.rfft(w)) + 1e-10
         freqs = np.fft.rfftfreq(frame, 1.0 / sr)
-        mag = spec + 1e-10
-        # spectral centroid
-        centroid = float(np.sum(freqs * mag) / np.sum(mag))
-        # spectral rolloff (85%)
-        cum = np.cumsum(mag)
+        # spectral centroid / rolloff
+        centroid = float(np.sum(freqs * spec) / np.sum(spec))
+        cum = np.cumsum(spec)
         rolloff = float(freqs[np.searchsorted(cum, 0.85 * cum[-1])])
-        # zero crossing rate
         zcr = float(np.mean((seg[:-1] * seg[1:]) < 0))
-        # rms
         rms = float(np.sqrt(np.mean(seg ** 2)))
-        # chroma: fold into 12 semitone classes
-        bins = np.log2(freqs[1:] / 440.0 * 12 + 69)  # MIDI-ish
+        # 12-bin log-frequency chroma (project energy onto semitone bands)
         chroma = np.zeros(12)
-        for k, e in zip(bins, mag[1:]):
-            chroma[int(round(k)) % 12] += e
-        chroma = chroma / (chroma.sum() + 1e-10)
-        feats.append([centroid, rolloff, zcr, rms] + chroma.tolist())
+        for f, e in zip(freqs, spec):
+            if f <= 0:
+                continue
+            midi_f = 69 + 12 * np.log2(f / 440.0)
+            if 24 <= midi_f < 96:
+                chroma[int(round(midi_f)) % 12] += e
+        s = chroma.sum()
+        if s > 0:
+            chroma = chroma / s
+        feats.append([centroid / sr, rolloff / sr, zcr, rms] + chroma.tolist())
     return np.array(feats) if feats else np.zeros((1, 16))
 
 
 def extract_features(path):
-    """Return a normalized 32-dim feature vector for the file."""
+    """Return a normalized 32-dim feature vector for the file.
+
+    Frequencies are scaled by sample rate so the vector is comparable across
+    files. The 12-bin chroma carries PITCH CLASS content (so 440 vs 120 differ),
+    centroid/rolloff carry brightness. Honest v1: timbre/texture, not semantics.
+    """
     samples, sr = _decode_pcm(path)
     if samples.size == 0:
         return np.zeros(32)
@@ -68,7 +74,6 @@ def extract_features(path):
     mean = f.mean(axis=0)
     std = f.std(axis=0)
     vec = np.concatenate([mean, std])
-    # guard against zero vector
     norm = np.linalg.norm(vec)
     if norm > 0:
         vec = vec / norm
