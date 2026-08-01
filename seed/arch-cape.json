@@ -1,0 +1,14 @@
+{
+  "manifest_version": "0.1.0",
+  "generated_at": "2026-07-31T00:00:00+00:00",
+  "name": "Arch Cape",
+  "location": "Portland, Oregon",
+  "genres": ["ambient", "experimental", "indie", "soundscape"],
+  "bio": "Ambient/experimental film music, soundscape composition. (bio sourced from public Bandcamp listing.)",
+  "contact": null,
+  "links": [
+    {"kind": "bandcamp", "url": "https://arch-cape.bandcamp.com/"}
+  ],
+  "releases": [],
+  "owner_note": "This manifest is owned by the artist. Host it anywhere (own site, GitHub Pages, IPFS). No account, no tier, no cost."
+}

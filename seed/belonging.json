@@ -1,0 +1,14 @@
+{
+  "manifest_version": "0.1.0",
+  "generated_at": "2026-07-31T00:00:00+00:00",
+  "name": "Belonging",
+  "location": "Portland, Oregon",
+  "genres": ["indie", "noise", "punk", "emo"],
+  "bio": "Portland indie/noise/punk/emo. (bio sourced from public Bandcamp listing.)",
+  "contact": null,
+  "links": [
+    {"kind": "bandcamp", "url": "https://belongingpdx.bandcamp.com/music"}
+  ],
+  "releases": [],
+  "owner_note": "This manifest is owned by the artist. Host it anywhere (own site, GitHub Pages, IPFS). No account, no tier, no cost."
+}
