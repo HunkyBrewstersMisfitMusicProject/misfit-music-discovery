@@ -90,6 +90,9 @@ def query(index, genre=None, location=None, name=None, curator=None, limit=20):
 
 
 def _fetch(url):
+    # Accept bare file paths (hand-authored registries) as file:// URLs.
+    if "://" not in url:
+        url = "file://" + url
     req = urllib.request.Request(url, headers={"User-Agent": "mmp/0.1"})
     with urllib.request.urlopen(req, timeout=20) as r:
         return r.read().decode("utf-8")
