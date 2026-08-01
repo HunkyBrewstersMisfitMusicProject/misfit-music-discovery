@@ -9,9 +9,12 @@ This is NOT a learned embedding — it catches "sounds alike" by spectral charac
 not musical semantics. That's the honest v1: real, free, offline, no model download.
 A learned encoder is a later upgrade (crosses into model-hosted territory).
 """
-
+import hashlib
 import io
+import os
 import subprocess
+import tempfile
+import urllib.request
 import numpy as np
 
 
@@ -99,6 +102,41 @@ def mean_vectors(vecs):
     if norm > 0:
         m = m / norm
     return m.astype(np.float32)
+
+
+def preview_vec(manifest, timeout=20, tmpdir=None):
+    """Fetch an artist's HOSTED preview clip, fingerprint it, DISCARD the clip.
+
+    The audio bytes are NEVER stored by the index — downloaded to a temp file,
+    decoded to a feature vector, then deleted. Custody of the audio stays with
+    the artist. Returns (vector, None) on success, or (None, reason) on failure
+    (no preview field, fetch error, decode error, offline).
+
+    This is the bridge from tag-guess to TRUE sound-similarity for registry
+    artists, without us ever hosting or retaining their music.
+    """
+    url = manifest.get("preview")
+    if not url:
+        return None, "no preview field"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "mmp/0.1"})
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            data = r.read()
+        d = tmpdir or tempfile.mkdtemp(prefix="mmp-prev-")
+        os.makedirs(d, exist_ok=True)
+        suffix = ".webm" if url.lower().endswith(".webm") else ".tmp"
+        path = os.path.join(d, "clip" + suffix)
+        with open(path, "wb") as fh:
+            fh.write(data)
+        vec = extract_features(path)
+        os.remove(path)
+        if tmpdir is None:
+            os.rmdir(d)
+        if vec.shape != (32,) or float((vec ** 2).sum()) == 0:
+            return None, "decode produced empty vector"
+        return vec, None
+    except Exception as e:
+        return None, f"preview fetch failed: {e}"
 
 
 def artist_vec(manifest):

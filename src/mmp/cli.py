@@ -81,6 +81,9 @@ def main(argv=None):
     ps.add_argument("--registry",
                     default="file:///home/misfitmusicproject/misfit-music/seed-registry.json",
                     help="registry URL or file:// path")
+    ps.add_argument("--curators",
+                    default="file:///home/misfitmusicproject/misfit-music/seed/curators.json",
+                    help="curators URL or file:// path")
     ps.add_argument("--top", type=int, default=5, help="how many to return")
 
     # --- listener: export (portable playlist of matched artists) ---
@@ -90,6 +93,9 @@ def main(argv=None):
     pe.add_argument("--registry",
                     default="file:///home/misfitmusicproject/misfit-music/seed-registry.json",
                     help="registry URL or file:// path")
+    pe.add_argument("--curators",
+                    default="file:///home/misfitmusicproject/misfit-music/seed/curators.json",
+                    help="curators URL or file:// path")
     pe.add_argument("--service", default="generic",
                     choices=["generic", "m3u", "csv"],
                     help="export format (generic=JSON+M3U+CSV, all host-neutral)")
@@ -279,15 +285,23 @@ def main(argv=None):
     if args.cmd == "similar":
         try:
             ref = af.extract_features(args.track)
-            idx = index_mod.build_index(args.registry)
-            items = [(a["name"], af.artist_vec(a)) for a in idx["artists"]]
-            ranked = af.rank_by_similarity(ref, items)[: args.top]
+            idx = index_mod.build_index(args.registry, args.curators)
+            results = []
+            for a in idx["artists"]:
+                vec, reason = af.preview_vec(a)
+                mode = "audio"
+                if vec is None:
+                    vec = af.artist_vec(a)
+                    mode = "tags"
+                score = af.cosine_similarity(ref, vec)
+                results.append((a["name"], score, mode, a))
+            results.sort(key=lambda x: x[1], reverse=True)
             print(f"reference: {args.track}")
-            print(f"sound-similar artists (timbre/texture match):")
-            for name, score in ranked:
-                a = next(x for x in idx["artists"] if x["name"] == name)
+            print(f"sound-similar artists (audio=hosted clip match, "
+                  f"tags=manifest style fallback):")
+            for name, score, mode, a in results[: args.top]:
                 links = " ".join(l["url"] for l in a.get("links", []))
-                print(f"  - {name}  [score {score:.3f}]  {links}")
+                print(f"  - {name}  [score {score:.3f} via {mode}]  {links}")
             return 0
         except Exception as e:
             print(f"FAILED similar: {e}", file=sys.stderr)
@@ -296,15 +310,23 @@ def main(argv=None):
     if args.cmd == "export":
         try:
             ref = af.extract_features(args.track)
-            idx = index_mod.build_index(args.registry)
-            items = [(a["name"], af.artist_vec(a)) for a in idx["artists"]]
-            ranked = af.rank_by_similarity(ref, items)[: args.top]
+            idx = index_mod.build_index(args.registry, args.curators)
+            results = []
+            for a in idx["artists"]:
+                vec, reason = af.preview_vec(a)
+                mode = "audio"
+                if vec is None:
+                    vec = af.artist_vec(a)
+                    mode = "tags"
+                score = af.cosine_similarity(ref, vec)
+                results.append((a["name"], score, mode, a))
+            results.sort(key=lambda x: x[1], reverse=True)
             entries = []
-            for name, score in ranked:
-                a = next(x for x in idx["artists"] if x["name"] == name)
+            for name, score, mode, a in results[: args.top]:
                 entries.append({
                     "name": name,
                     "score": round(score, 3),
+                    "match_mode": mode,
                     "location": a.get("location"),
                     "links": a.get("links", []),
                 })
@@ -320,10 +342,11 @@ def main(argv=None):
                     fh.write(f"#EXTINF:-1,{e['name']}\n{url}\n")
             # CSV for importers (Soundiiz/TuneMyMusic-style)
             with open(args.out + ".csv", "w", encoding="utf-8") as fh:
-                fh.write("artist,score,location,link\n")
+                fh.write("artist,score,match_mode,location,link\n")
                 for e in entries:
                     url = (e["links"][0]["url"] if e["links"] else "")
-                    fh.write(f"{e['name']},{e['score']},{e['location'] or ''},{url}\n")
+                    fh.write(f"{e['name']},{e['score']},{e['match_mode']},"
+                             f"{e['location'] or ''},{url}\n")
             print(f"exported {len(entries)} artists -> {args.out}.(json|m3u|csv)")
             print("Import the .m3u or .csv into YOUR service. We host nothing.")
             return 0
