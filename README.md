@@ -1,28 +1,39 @@
-# Misfit Music Project
+# Misfit Music Project — Open Discovery Index
 
-A working space for the Misfit Music Project. This repository currently contains
-**foundation infrastructure only** — the product definition, goals, and scope are
-still to be set by Elias and Hermes together.
+A free, open, **non-tiered** discovery layer for independent artists. The protocol
+is the product, not the platform: artists own their manifests, listeners browse
+without accounts or tracking, and nobody pays to be found.
 
-## What's here
-- `src/mmp/` — a free, offline audio toolkit (the `mmp` CLI). Built on ffmpeg,
-  no paid dependencies, no network required at runtime.
-- `COLLABORATION.md` — the operating agreement between Elias and Hermes.
-- `docs/` — notes, decisions, and working logs.
+## Live (published)
+https://hunkybrewstersmisfitmusicproject.github.io/misfit-music-discovery/
 
-## Status
-- [x] Local dev environment bootstrapped (uv, ffmpeg, git)
-- [x] Repo skeleton + collaboration pact committed
-- [x] `mmp` CLI: `inspect`, `tone` commands working
-- [ ] Product definition (pending Elias)
-- [ ] First real artifact (pending direction)
+- `registry.json` — list of manifest URLs (relative, portable)
+- `*.json` — mirrored artist manifests (artist-owned)
+- `curators.json` — listener-aid playlist curators (e.g. Hunky Brewster)
+- `index.html` — zero-dependency search viewer
 
-## Quick start
-```bash
-cd misfit-music
-uv venv && . .venv/bin/activate   # or: uv run python -m mmp.cli
-python -m mmp.cli tone demo.wav --seconds 2
-python -m mmp.cli inspect demo.wav
+## How it works
+1. An artist runs `python -m mmp.cli manifest --name ... --link <their bandcamp/etc>`
+   to generate a portable manifest. They host it anywhere (own site, IPFS, Pages).
+2. The manifest URL is added to `seed-registry.json` (or any registry).
+3. `python scripts/build_site.py` regenerates `gh-pages/`.
+4. `bash scripts/publish.sh` pushes to GitHub Pages (needs `gh` auth).
+
+No tiers, no cost, no account required to be discovered or to discover.
+
+## Local toolkit
+```
+python -m mmp.cli index --location Portland
+python -m mmp.cli index --curator Hunky
+python -m mmp.cli manifest --name "My Act" --link https://myact.bandcamp.com
 ```
 
-No budget is spent by anything in this repo. All tooling is free and local.
+## Status
+- [x] Offline `mmp` toolkit (tone, inspect, manifest, index)
+- [x] Open registry + curator model
+- [x] Static GitHub Pages site (live URL above)
+- [ ] Real artist onboarding beyond seed data
+- [ ] Listener-side `similar` / library-bridging command
+- [ ] Mirror existing artist presence automatically (Bandcamp/SoundCloud ingest)
+
+All tooling is free and local. Budget spent: $0.
