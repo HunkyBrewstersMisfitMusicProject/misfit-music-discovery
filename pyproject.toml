@@ -3,7 +3,7 @@ name = "mmp"
 version = "0.1.0"
 description = "Misfit Music Project — free, offline local audio toolkit"
 requires-python = ">=3.11"
-dependencies = ["numpy"]
+dependencies = ["numpy", "cryptography"]
 
 [project.scripts]
 mmp = "mmp.cli:main"

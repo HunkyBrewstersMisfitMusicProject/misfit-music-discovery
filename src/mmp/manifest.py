@@ -38,11 +38,18 @@ def _classify_link(url):
 
 
 def make_manifest(name, location=None, genres=None, bio=None, links=None,
-                  contact=None):
+                  contact=None, payment=None, preview=None):
     """Build a manifest dict from an artist's existing footprint.
 
     `links` may be a list of URLs or list of (kind, url) tuples. This is the
     cold-start answer: artists paste their EXISTING presence and we mirror it.
+
+    `payment` (optional): a direct artist payment rail — a Lightning invoice or
+    crypto address. Listener pays the artist DIRECTLY; Misfit Music takes no cut
+    and hosts nothing. This is the only crypto in scope.
+
+    `preview` (optional): URL to an artist-hosted short preview clip. Fetched
+    transiently for TRUE sound-similarity matching; never stored by the index.
     """
     genres = genres or []
     links = links or []
@@ -54,7 +61,7 @@ def make_manifest(name, location=None, genres=None, bio=None, links=None,
             kind, url = _classify_link(item), item
         normalized.append({"kind": kind, "url": url})
 
-    return {
+    m = {
         "manifest_version": MANIFEST_VERSION,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "name": name,
@@ -71,6 +78,11 @@ def make_manifest(name, location=None, genres=None, bio=None, links=None,
             "(own site, GitHub Pages, IPFS). No account, no tier, no cost."
         ),
     }
+    if payment:
+        m["payment"] = payment
+    if preview:
+        m["preview"] = preview
+    return m
 
 
 def render_manifest(manifest, path=None):
