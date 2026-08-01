@@ -1,0 +1,20 @@
+{
+  "manifest_version": "0.1.0",
+  "generated_at": "2026-07-31T00:00:00+00:00",
+  "name": "Purr Tapes",
+  "location": "Portland, Oregon",
+  "genres": [
+    "electronic",
+    "experimental"
+  ],
+  "bio": "DIY tape label based in Portland, OR. Releases independent artists with a focus on electronic and experimental sounds. (bio sourced from public Bandcamp listing.)",
+  "contact": null,
+  "links": [
+    {
+      "kind": "bandcamp",
+      "url": "https://purrtapes.bandcamp.com/"
+    }
+  ],
+  "releases": [],
+  "owner_note": "This manifest is owned by the artist. Host it anywhere (own site, GitHub Pages, IPFS). No account, no tier, no cost."
+}

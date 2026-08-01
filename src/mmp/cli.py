@@ -46,9 +46,13 @@ def main(argv=None):
     pib.add_argument("--registry",
                      default="file:///home/misfitmusicproject/misfit-music/seed-registry.json",
                      help="registry URL or file:// path (list of manifest URLs)")
+    pib.add_argument("--curators",
+                     default="file:///home/misfitmusicproject/misfit-music/seed/curators.json",
+                     help="curators URL or file:// path (list of curator records)")
     pib.add_argument("--genre", help="filter by genre (substring, ci)")
     pib.add_argument("--location", help="filter by location (substring, ci)")
     pib.add_argument("--name", help="filter by name (substring, ci)")
+    pib.add_argument("--curator", help="filter by curator name (substring, ci)")
 
     args = p.parse_args(argv)
 
@@ -83,25 +87,35 @@ def main(argv=None):
 
     if args.cmd == "index":
         try:
-            idx = index_mod.build_index(args.registry)
+            idx = index_mod.build_index(args.registry, args.curators)
         except Exception as e:
             print(f"FAILED to build index: {e}", file=sys.stderr)
             return 1
         results = index_mod.query(
-            idx, genre=args.genre, location=args.location, name=args.name
+            idx, genre=args.genre, location=args.location,
+            name=args.name, curator=args.curator,
         )
         print(f"registry: {idx['registry']}")
         print(f"artists resolved: {len(idx['artists'])}  "
+              f"curators: {len(idx['curators'])}  "
               f"errors: {len(idx['errors'])}")
-        if args.genre or args.location or args.name:
-            print(f"matching filter: {len(results)}")
-        for a in results:
-            loc = a.get("location") or "?"
-            genres = ", ".join(a.get("genres", []) or []) or "?"
-            links = " ".join(l["url"] for l in a.get("links", []))
-            print(f"  - {a.get('name')}  [{loc}]  ({genres})")
-            if links:
-                print(f"      {links}")
+        if args.curator:
+            for c in results:
+                pls = "  ".join(f"{p['title']} -> {p['url']}"
+                                for p in c.get("playlists", []))
+                print(f"  - CURATOR {c.get('name')}: {c.get('blurb')}")
+                if pls:
+                    print(f"      {pls}")
+        else:
+            if args.genre or args.location or args.name:
+                print(f"matching filter: {len(results)}")
+            for a in results:
+                loc = a.get("location") or "?"
+                genres = ", ".join(a.get("genres", []) or []) or "?"
+                links = " ".join(l["url"] for l in a.get("links", []))
+                print(f"  - {a.get('name')}  [{loc}]  ({genres})")
+                if links:
+                    print(f"      {links}")
         for e in idx["errors"]:
             print(f"  ! error {e['url']}: {e['reason']}", file=sys.stderr)
         return 0
