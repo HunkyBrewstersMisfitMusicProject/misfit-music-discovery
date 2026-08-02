@@ -1,0 +1,24 @@
+{
+  "manifest_version": "0.1.0",
+  "generated_at": "2026-08-02T00:00:00+00:00",
+  "name": "Chrome Reverb",
+  "location": "London, UK",
+  "genres": [
+    "synthwave",
+    "darkwave",
+    "electronic"
+  ],
+  "bio": "Cold, reverb-drenched synthwave with triangle-wave bass and industrial undertones.",
+  "links": [
+    {
+      "kind": "bandcamp",
+      "url": "https://chromereverb.bandcamp.com/"
+    },
+    {
+      "kind": "website",
+      "url": "https://chromereverb.com"
+    }
+  ],
+  "contact": "contact@chromereverb.co.uk",
+  "preview": "previews/chrome-reverb.wav"
+}

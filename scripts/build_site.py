@@ -47,6 +47,15 @@ def main():
                 fh.write("\n")
             manifests[fn] = obj
 
+    # Copy preview clips (if any) into gh-pages
+    previews_src = os.path.join(ROOT, "gh-pages", "previews")
+    previews_dst = os.path.join(OUT, "previews")
+    if os.path.isdir(previews_src):
+        os.makedirs(previews_dst, exist_ok=True)
+        for fn in os.listdir(previews_src):
+            shutil.copy2(os.path.join(previews_src, fn),
+                         os.path.join(previews_dst, fn))
+
     # Build registry (relative URLs to the mirrored manifests)
     registry = [fn for fn in manifests]
     with open(os.path.join(OUT, "registry.json"), "w", encoding="utf-8") as fh:
@@ -67,12 +76,14 @@ def main():
         fh.write(html)
 
     print(f"Built gh-pages/ with {len(manifests)} manifests, "
-          f"{len(curators)} curators.")
+          f"{len(curators)} curators, "
+          f"{sum(1 for m in manifests.values() if m.get('preview'))} with previews.")
 
 
 def _viewer_html(manifests, curators):
     artists = [{"name": m.get("name"), "location": m.get("location"),
-                "genres": m.get("genres", []), "links": m.get("links", [])}
+                "genres": m.get("genres", []), "links": m.get("links", []),
+                "preview": bool(m.get("preview"))}
                for m in manifests.values()]
     payload = {"artists": artists, "curators": curators}
     data = json.dumps(payload, ensure_ascii=False)
@@ -124,6 +135,7 @@ function render(q){
     const div = document.createElement("div");
     div.className = "card" + (x.type==="curator" ? " curator" : "");
     let html = `<strong>${x.name}</strong>`;
+    if(x.preview){ html += ` <span class="tag" style="background:#cfe;">preview clip</span>`; }
     if(x.type==="curator"){ html += ` <span class="tag">playlist curator</span>`; }
     if(x.location){ html += ` <span class="tag">${x.location}</span>`; }
     for(const g of (x.genres||[])){ html += ` <span class="tag">${g}</span>`; }

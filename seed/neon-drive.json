@@ -1,0 +1,14 @@
+{
+  "manifest_version": "0.1.0",
+  "generated_at": "2026-08-02T00:00:00+00:00",
+  "name": "Neon Drive",
+  "location": "Berlin, Germany",
+  "genres": ["synthwave", "darksynth", "electronic"],
+  "bio": "Driving darksynth with punchy square-wave leads and relentless tempo. Built for the highway at 3am.",
+  "links": [
+    {"kind": "bandcamp", "url": "https://neondrive.bandcamp.com/"},
+    {"kind": "youtube", "url": "https://youtube.com/@neondrive"}
+  ],
+  "contact": "info@neondrive.de",
+  "preview": "previews/neon-drive.wav"
+}
