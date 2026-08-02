@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Hunky Brewster",
+    "kind": "playlist-curator",
+    "blurb": "Curator of vocal synthwave & synthwave playlists. Listener-aid, not a gatekeeper.",
+    "playlists": [
+      {
+        "title": "Hunky Brewster's Vocal Synthwave",
+        "url": "https://open.spotify.com/playlist/1vRiWFOJKozD7cazCGvMK3",
+        "platform": "spotify"
+      },
+      {
+        "title": "Hunky Brewster's Synthwave Love Songs",
+        "url": "https://open.spotify.com/playlist/1QXpdFVxbWaOnbk5FdfLzx",
+        "platform": "spotify"
+      }
+    ],
+    "source_note": "Playlist URLs verified via public web search 2026-07-31. Curator has 9 public playlists on Spotify."
+  }
+]

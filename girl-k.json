@@ -1,0 +1,19 @@
+{
+  "manifest_version": "0.1.0",
+  "generated_at": "2026-07-31T00:00:00+00:00",
+  "name": "GIRL K",
+  "location": "Chicago, Illinois",
+  "genres": [
+    "indie pop"
+  ],
+  "bio": "Indie Pop artist from Chicago, Illinois. (bio sourced from public Bandcamp listing.)",
+  "contact": "girlkmusic@gmail.com",
+  "links": [
+    {
+      "kind": "bandcamp",
+      "url": "https://girlk.bandcamp.com/music"
+    }
+  ],
+  "releases": [],
+  "owner_note": "This manifest is owned by the artist. Host it anywhere (own site, GitHub Pages, IPFS). No account, no tier, no cost."
+}

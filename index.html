@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Misfit Music Project — Open Discovery</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 760px; margin: 2rem auto;
+         padding: 0 1rem; color: #111; line-height: 1.5; }
+  h1 { font-size: 1.4rem; }
+  .tag { display: inline-block; background: #eee; border-radius: 4px;
+         padding: 1px 6px; font-size: .8rem; margin: 2px; }
+  input { width: 100%; padding: .5rem; font-size: 1rem; margin-bottom: 1rem; }
+  .card { border: 1px solid #ddd; border-radius: 8px; padding: .75rem 1rem;
+          margin-bottom: .75rem; }
+  a { color: #0a6; }
+  .curator { background: #faf6ff; }
+  .note { font-size: .85rem; color: #666; }
+</style>
+</head>
+<body>
+<h1>Misfit Music Project — Open Discovery</h1>
+<p class="note">An open, non-tiered discovery index. Artists own their manifests;
+curators help listeners find them. No account, no tier, no cost.
+<a href="registry.json">registry.json</a></p>
+<input id="q" placeholder="Search by name, genre, city, or curator…" autofocus>
+<div id="out"></div>
+<script>
+const DATA = {"artists": [{"name": "Purr Tapes", "location": "Portland, Oregon", "genres": ["electronic", "experimental"], "links": [{"kind": "bandcamp", "url": "https://purrtapes.bandcamp.com/"}], "preview": false}, {"name": "Arch Cape", "location": "Portland, Oregon", "genres": ["ambient", "experimental", "indie", "soundscape"], "links": [{"kind": "bandcamp", "url": "https://arch-cape.bandcamp.com/"}], "preview": false}, {"name": "GIRL K", "location": "Chicago, Illinois", "genres": ["indie pop"], "links": [{"kind": "bandcamp", "url": "https://girlk.bandcamp.com/music"}], "preview": false}, {"name": "Belonging", "location": "Portland, Oregon", "genres": ["indie", "noise", "punk", "emo"], "links": [{"kind": "bandcamp", "url": "https://belongingpdx.bandcamp.com/music"}], "preview": false}, {"name": "Outrun Escape", "location": "Los Angeles, California", "genres": ["synthwave", "outrun", "electronic"], "links": [{"kind": "bandcamp", "url": "https://outrunescape.bandcamp.com/"}, {"kind": "spotify", "url": "https://open.spotify.com/artist/outrunescape"}], "preview": true}, {"name": "Neon Drive", "location": "Berlin, Germany", "genres": ["synthwave", "darksynth", "electronic"], "links": [{"kind": "bandcamp", "url": "https://neondrive.bandcamp.com/"}, {"kind": "youtube", "url": "https://youtube.com/@neondrive"}], "preview": true}, {"name": "Midnight Circuit", "location": "Tokyo, Japan", "genres": ["synthwave", "ambient", "electronic"], "links": [{"kind": "bandcamp", "url": "https://midnightcircuit.bandcamp.com/"}, {"kind": "soundcloud", "url": "https://soundcloud.com/midnightcircuit"}], "preview": true}, {"name": "Chrome Reverb", "location": "London, UK", "genres": ["synthwave", "darkwave", "electronic"], "links": [{"kind": "bandcamp", "url": "https://chromereverb.bandcamp.com/"}, {"kind": "website", "url": "https://chromereverb.com"}], "preview": true}, {"name": "Vapor Dreams", "location": "Los Angeles, California", "genres": ["synthwave", "vaporwave", "electronic"], "links": [{"kind": "bandcamp", "url": "https://vapordreams.bandcamp.com/"}, {"kind": "spotify", "url": "https://open.spotify.com/artist/vapordreams"}], "preview": true}], "curators": [{"name": "Hunky Brewster", "kind": "playlist-curator", "blurb": "Curator of vocal synthwave & synthwave playlists. Listener-aid, not a gatekeeper.", "playlists": [{"title": "Hunky Brewster's Vocal Synthwave", "url": "https://open.spotify.com/playlist/1vRiWFOJKozD7cazCGvMK3", "platform": "spotify"}, {"title": "Hunky Brewster's Synthwave Love Songs", "url": "https://open.spotify.com/playlist/1QXpdFVxbWaOnbk5FdfLzx", "platform": "spotify"}], "source_note": "Playlist URLs verified via public web search 2026-07-31. Curator has 9 public playlists on Spotify."}]};
+const all = [
+  ...DATA.artists.map(a => ({type:"artist", ...a})),
+  ...DATA.curators.map(c => ({type:"curator", name:c.name, blurb:c.blurb,
+       links:(c.playlists||[]).map(p=>({kind:"playlist", url:p.url}))}))
+];
+function render(q){
+  q = (q||"").toLowerCase();
+  const out = document.getElementById("out");
+  out.innerHTML = "";
+  for(const x of all){
+    const hay = [x.name, x.location, (x.genres||[]).join(" "), x.blurb||""]
+      .join(" ").toLowerCase();
+    if(q && !hay.includes(q)) continue;
+    const div = document.createElement("div");
+    div.className = "card" + (x.type==="curator" ? " curator" : "");
+    let html = `<strong>${x.name}</strong>`;
+    if(x.preview){ html += ` <span class="tag" style="background:#cfe;">preview clip</span>`; }
+    if(x.type==="curator"){ html += ` <span class="tag">playlist curator</span>`; }
+    if(x.location){ html += ` <span class="tag">${x.location}</span>`; }
+    for(const g of (x.genres||[])){ html += ` <span class="tag">${g}</span>`; }
+    if(x.blurb){ html += `<div class="note">${x.blurb}</div>`; }
+    for(const l of (x.links||[])){
+      html += `<div><a href="${l.url}" target="_blank" rel="noopener">${l.url}</a></div>`;
+    }
+    div.innerHTML = html;
+    out.appendChild(div);
+  }
+}
+document.getElementById("q").addEventListener("input", e=>render(e.target.value));
+render("");
+</script>
+</body>
+</html>

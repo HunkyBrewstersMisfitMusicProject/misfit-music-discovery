@@ -1,0 +1,24 @@
+{
+  "manifest_version": "0.1.0",
+  "generated_at": "2026-08-02T00:00:00+00:00",
+  "name": "Outrun Escape",
+  "location": "Los Angeles, California",
+  "genres": [
+    "synthwave",
+    "outrun",
+    "electronic"
+  ],
+  "bio": "Retro-futuristic synthwave with warm analog textures and driving basslines. Inspired by 80s road movies and neon-lit highways.",
+  "links": [
+    {
+      "kind": "bandcamp",
+      "url": "https://outrunescape.bandcamp.com/"
+    },
+    {
+      "kind": "spotify",
+      "url": "https://open.spotify.com/artist/outrunescape"
+    }
+  ],
+  "contact": "hello@outrunescape.fm",
+  "preview": "previews/outrun-escape.wav"
+}

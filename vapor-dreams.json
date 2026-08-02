@@ -1,0 +1,24 @@
+{
+  "manifest_version": "0.1.0",
+  "generated_at": "2026-08-02T00:00:00+00:00",
+  "name": "Vapor Dreams",
+  "location": "Los Angeles, California",
+  "genres": [
+    "synthwave",
+    "vaporwave",
+    "electronic"
+  ],
+  "bio": "Ethereal, hazy synthwave with layered sawtooth pads and dreamy reverb. Nostalgia filtered through glass.",
+  "links": [
+    {
+      "kind": "bandcamp",
+      "url": "https://vapordreams.bandcamp.com/"
+    },
+    {
+      "kind": "spotify",
+      "url": "https://open.spotify.com/artist/vapordreams"
+    }
+  ],
+  "contact": "hello@vapordreams.fm",
+  "preview": "previews/vapor-dreams.wav"
+}
