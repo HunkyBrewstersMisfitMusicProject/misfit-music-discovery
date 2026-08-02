@@ -24,9 +24,9 @@ OUT = os.path.join(ROOT, "gh-pages")
 
 def main():
     os.makedirs(OUT, exist_ok=True)
-    # clean previous build (but keep .git / CNAME if present)
+    # clean previous build (but keep .git / CNAME / previews if present)
     for name in os.listdir(OUT):
-        if name in (".git", "CNAME", "README.md"):
+        if name in (".git", "CNAME", "README.md", "previews"):
             continue
         p = os.path.join(OUT, name)
         if os.path.isfile(p):
