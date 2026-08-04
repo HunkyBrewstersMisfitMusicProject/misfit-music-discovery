@@ -10,12 +10,19 @@
   h1 { font-size: 1.4rem; }
   .tag { display: inline-block; background: #eee; border-radius: 4px;
          padding: 1px 6px; font-size: .8rem; margin: 2px; }
-  input { width: 100%; padding: .5rem; font-size: 1rem; margin-bottom: 1rem; }
+  input { width: 100%; padding: .5rem; font-size: 1rem; margin-bottom: 1rem;
+          box-sizing: border-box; }
   .card { border: 1px solid #ddd; border-radius: 8px; padding: .75rem 1rem;
           margin-bottom: .75rem; }
   a { color: #0a6; }
   .curator { background: #faf6ff; }
   .note { font-size: .85rem; color: #666; }
+  .bio { margin: .4rem 0; }
+  .links a { display: inline-block; margin: 2px 8px 2px 0; font-size: .92rem; }
+  .preview { margin-top: .5rem; }
+  .preview audio { width: 100%; height: 36px; }
+  .muted { color: #999; font-size: .78rem; }
+  #status { color: #666; font-style: italic; }
 </style>
 </head>
 <body>
@@ -23,40 +30,183 @@
 <p class="note">An open, non-tiered discovery index. Artists own their manifests;
 curators help listeners find them. No account, no tier, no cost.
 <a href="registry.json">registry.json</a></p>
-<input id="q" placeholder="Search by name, genre, city, or curator…" autofocus>
+<input id="q" placeholder="Search by name, genre, city, or curator…" autocomplete="off">
+<div id="status">Loading manifests…</div>
 <div id="out"></div>
 <script>
-const DATA = {"artists": [{"name": "Purr Tapes", "location": "Portland, Oregon", "genres": ["electronic", "experimental"], "links": [{"kind": "bandcamp", "url": "https://purrtapes.bandcamp.com/"}], "preview": false}, {"name": "Arch Cape", "location": "Portland, Oregon", "genres": ["ambient", "experimental", "indie", "soundscape"], "links": [{"kind": "bandcamp", "url": "https://arch-cape.bandcamp.com/"}], "preview": false}, {"name": "GIRL K", "location": "Chicago, Illinois", "genres": ["indie pop"], "links": [{"kind": "bandcamp", "url": "https://girlk.bandcamp.com/music"}], "preview": false}, {"name": "Belonging", "location": "Portland, Oregon", "genres": ["indie", "noise", "punk", "emo"], "links": [{"kind": "bandcamp", "url": "https://belongingpdx.bandcamp.com/music"}], "preview": false}, {"name": "Outrun Escape", "location": "Los Angeles, California", "genres": ["synthwave", "outrun", "electronic"], "links": [{"kind": "bandcamp", "url": "https://outrunescape.bandcamp.com/"}, {"kind": "spotify", "url": "https://open.spotify.com/artist/outrunescape"}], "preview": true}, {"name": "Neon Drive", "location": "Berlin, Germany", "genres": ["synthwave", "darksynth", "electronic"], "links": [{"kind": "bandcamp", "url": "https://neondrive.bandcamp.com/"}, {"kind": "youtube", "url": "https://youtube.com/@neondrive"}], "preview": true}, {"name": "Midnight Circuit", "location": "Tokyo, Japan", "genres": ["synthwave", "ambient", "electronic"], "links": [{"kind": "bandcamp", "url": "https://midnightcircuit.bandcamp.com/"}, {"kind": "soundcloud", "url": "https://soundcloud.com/midnightcircuit"}], "preview": true}, {"name": "Chrome Reverb", "location": "London, UK", "genres": ["synthwave", "darkwave", "electronic"], "links": [{"kind": "bandcamp", "url": "https://chromereverb.bandcamp.com/"}, {"kind": "website", "url": "https://chromereverb.com"}], "preview": true}, {"name": "Vapor Dreams", "location": "Los Angeles, California", "genres": ["synthwave", "vaporwave", "electronic"], "links": [{"kind": "bandcamp", "url": "https://vapordreams.bandcamp.com/"}, {"kind": "spotify", "url": "https://open.spotify.com/artist/vapordreams"}], "preview": true}], "curators": [{"name": "Hunky Brewster", "kind": "playlist-curator", "blurb": "Curator of vocal synthwave & synthwave playlists. Listener-aid, not a gatekeeper.", "playlists": [{"title": "Hunky Brewster's Vocal Synthwave", "url": "https://open.spotify.com/playlist/1vRiWFOJKozD7cazCGvMK3", "platform": "spotify"}, {"title": "Hunky Brewster's Synthwave Love Songs", "url": "https://open.spotify.com/playlist/1QXpdFVxbWaOnbk5FdfLzx", "platform": "spotify"}], "source_note": "Playlist URLs verified via public web search 2026-07-31. Curator has 9 public playlists on Spotify."}]};
-const all = [
-  ...DATA.artists.map(a => ({type:"artist", ...a})),
-  ...DATA.curators.map(c => ({type:"curator", name:c.name, blurb:c.blurb,
-       links:(c.playlists||[]).map(p=>({kind:"playlist", url:p.url}))}))
-];
-function render(q){
-  q = (q||"").toLowerCase();
+"use strict";
+
+// Build a card from a manifest object (artist) or a curator object.
+function buildCard(x) {
+  const div = document.createElement("div");
+  div.className = "card" + (x.type === "curator" ? " curator" : "");
+
+  const name = document.createElement("strong");
+  name.textContent = x.name || "(unnamed)";
+  div.appendChild(name);
+
+  if (x.location) {
+    const t = document.createElement("span");
+    t.className = "tag";
+    t.textContent = x.location;
+    div.appendChild(t);
+  }
+
+  for (const g of (x.genres || [])) {
+    const t = document.createElement("span");
+    t.className = "tag";
+    t.textContent = g;
+    div.appendChild(t);
+  }
+
+  if (x.type === "curator") {
+    const t = document.createElement("span");
+    t.className = "tag";
+    t.textContent = "playlist curator";
+    div.appendChild(t);
+  }
+
+  if (x.bio) {
+    const b = document.createElement("div");
+    b.className = "bio";
+    b.textContent = x.bio;
+    div.appendChild(b);
+  }
+
+  if (x.type === "curator" && x.blurb) {
+    const b = document.createElement("div");
+    b.className = "note";
+    b.textContent = x.blurb;
+    div.appendChild(b);
+  }
+
+  // Links: prefer curators' playlists, else the manifest's links array.
+  const links = x.type === "curator"
+    ? (x.playlists || []).map(p => ({ kind: p.platform || "playlist", url: p.url, label: p.title }))
+    : (x.links || []);
+
+  if (links.length) {
+    const lw = document.createElement("div");
+    lw.className = "links";
+    for (const l of links) {
+      const a = document.createElement("a");
+      a.href = l.url;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = l.label || l.kind || "link";
+      lw.appendChild(a);
+    }
+    div.appendChild(lw);
+  }
+
+  if (x.contact) {
+    const c = document.createElement("div");
+    c.className = "note";
+    const a = document.createElement("a");
+    a.href = "mailto:" + x.contact;
+    a.textContent = "contact: " + x.contact;
+    c.appendChild(a);
+    div.appendChild(c);
+  }
+
+  // Preview: only surfaces a player if the referenced file actually loads.
+  // Artists add a clip by dropping previews/<name>.wav (or .mp3) and setting
+  // the "preview" field in their manifest — no code change required.
+  if (x.preview) {
+    const wrap = document.createElement("div");
+    wrap.className = "preview";
+    const audio = document.createElement("audio");
+    audio.controls = true;
+    audio.preload = "none";
+    audio.src = x.preview;
+
+    const pending = document.createElement("span");
+    pending.className = "muted";
+    pending.textContent = "preview pending";
+
+    // If the clip isn't there yet, don't show a broken player — just a note.
+    audio.addEventListener("error", () => {
+      wrap.innerHTML = "";
+      wrap.appendChild(pending);
+    });
+
+    wrap.appendChild(audio);
+    div.appendChild(wrap);
+  }
+
+  if (x.generated_at) {
+    const m = document.createElement("div");
+    m.className = "muted";
+    m.textContent = "manifest updated " + x.generated_at.slice(0, 10);
+    div.appendChild(m);
+  }
+
+  return div;
+}
+
+function render(items, q) {
+  q = (q || "").toLowerCase().trim();
   const out = document.getElementById("out");
   out.innerHTML = "";
-  for(const x of all){
-    const hay = [x.name, x.location, (x.genres||[]).join(" "), x.blurb||""]
-      .join(" ").toLowerCase();
-    if(q && !hay.includes(q)) continue;
-    const div = document.createElement("div");
-    div.className = "card" + (x.type==="curator" ? " curator" : "");
-    let html = `<strong>${x.name}</strong>`;
-    if(x.preview){ html += ` <span class="tag" style="background:#cfe;">preview clip</span>`; }
-    if(x.type==="curator"){ html += ` <span class="tag">playlist curator</span>`; }
-    if(x.location){ html += ` <span class="tag">${x.location}</span>`; }
-    for(const g of (x.genres||[])){ html += ` <span class="tag">${g}</span>`; }
-    if(x.blurb){ html += `<div class="note">${x.blurb}</div>`; }
-    for(const l of (x.links||[])){
-      html += `<div><a href="${l.url}" target="_blank" rel="noopener">${l.url}</a></div>`;
-    }
-    div.innerHTML = html;
-    out.appendChild(div);
+  let shown = 0;
+  for (const x of items) {
+    const hay = [
+      x.name, x.location,
+      (x.genres || []).join(" "),
+      x.bio || "", x.blurb || ""
+    ].join(" ").toLowerCase();
+    if (q && !hay.includes(q)) continue;
+    out.appendChild(buildCard(x));
+    shown++;
+  }
+  const status = document.getElementById("status");
+  if (shown === 0) {
+    status.textContent = q ? "No matches for “" + q + "”." : "No entries.";
+  } else {
+    status.textContent = shown + " of " + items.length + " shown" +
+      (q ? " (filtered)" : "");
   }
 }
-document.getElementById("q").addEventListener("input", e=>render(e.target.value));
-render("");
+
+async function loadData() {
+  const items = [];
+
+  // Artists: registry.json lists manifest filenames; each is fetched live.
+  try {
+    const reg = await fetch("registry.json").then(r => r.json());
+    const manifests = await Promise.all(reg.map(f =>
+      fetch(f).then(r => r.json()).catch(err => ({ __error: f, __msg: String(err) }))
+    ));
+    for (const m of manifests) {
+      if (m && m.name && !m.__error) {
+        items.push(Object.assign({ type: "artist" }, m));
+      } else if (m && m.__error) {
+        console.warn("Failed to load manifest:", m.__error, m.__msg);
+      }
+    }
+  } catch (err) {
+    console.error("registry.json load failed:", err);
+  }
+
+  // Curators.
+  try {
+    const curators = await fetch("curators.json").then(r => r.json());
+    for (const c of curators || []) {
+      items.push(Object.assign({ type: "curator" }, c));
+    }
+  } catch (err) {
+    console.warn("curators.json load failed:", err);
+  }
+
+  return items;
+}
+
+(async function init() {
+  const items = await loadData();
+  const q = document.getElementById("q");
+  q.addEventListener("input", e => render(items, e.target.value));
+  render(items, "");
+})();
 </script>
 </body>
 </html>
