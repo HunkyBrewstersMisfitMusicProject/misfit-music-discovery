@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Misfit Music Project — Open Discovery">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0e2a"/>
+      <stop offset="1" stop-color="#1a0b2e"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <g fill="none" stroke="#0a6" stroke-width="3" opacity="0.5">
+    <circle cx="980" cy="120" r="180"/>
+    <circle cx="980" cy="120" r="120"/>
+    <circle cx="980" cy="120" r="60"/>
+  </g>
+  <text x="80" y="250" font-family="system-ui, sans-serif" font-size="84" font-weight="700" fill="#ffffff">Misfit Music</text>
+  <text x="80" y="345" font-family="system-ui, sans-serif" font-size="84" font-weight="700" fill="#0a6">Project</text>
+  <text x="80" y="430" font-family="system-ui, sans-serif" font-size="40" fill="#cbd5e1">Open Discovery</text>
+  <text x="80" y="500" font-family="system-ui, sans-serif" font-size="26" fill="#94a3b8">Artists own their manifests. No account, no tier, no cost.</text>
+  <text x="80" y="560" font-family="system-ui, sans-serif" font-size="22" fill="#64748b">Curators help listeners find them — listener-aid, not a gatekeeper.</text>
+</svg>

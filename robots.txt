@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://hunkybrewstersmisfitmusicproject.github.io/misfit-music-discovery/sitemap.xml
