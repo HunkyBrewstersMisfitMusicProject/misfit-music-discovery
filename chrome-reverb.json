@@ -1,5 +1,5 @@
 {
-  "manifest_version": "0.1.0",
+  "manifest_version": "0.2.0",
   "generated_at": "2026-08-02T00:00:00+00:00",
   "name": "Chrome Reverb",
   "location": "London, UK",
@@ -9,6 +9,7 @@
     "electronic"
   ],
   "bio": "Cold, reverb-drenched synthwave with triangle-wave bass and industrial undertones.",
+  "contact": "contact@chromereverb.co.uk",
   "links": [
     {
       "kind": "bandcamp",
@@ -19,6 +20,5 @@
       "url": "https://chromereverb.com"
     }
   ],
-  "contact": "contact@chromereverb.co.uk",
   "preview": "previews/chrome-reverb.wav"
 }

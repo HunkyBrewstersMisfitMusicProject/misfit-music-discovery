@@ -85,6 +85,44 @@ python3 -m http.server 8099
 A static file server is required (the page `fetch`es the JSON over HTTP, which
 `file://` blocks).
 
+## Manifest schema & validation
+
+Manifests follow `manifest.schema.json` (JSON Schema 2020-12). A validator checks
+every manifest for consistency:
+
+```bash
+python3 validate_manifests.py
+```
+
+The validator uses the `jsonschema` package when available. If it isn't
+installed, it falls back to a built-in structural check (required fields, non-empty
+`genres`/`links`, `preview` must be a string or `null`). For full schema
+enforcement, install it first:
+
+```bash
+python3 -m venv .venv && . .venv/bin/activate
+pip install jsonschema
+python3 validate_manifests.py
+```
+
+The canonical manifest fields are:
+
+| Field               | Type            | Notes                                         |
+|---------------------|-----------------|-----------------------------------------------|
+| `manifest_version`  | string (semver) | Bump on schema changes.                       |
+| `generated_at`      | date-time       | Last update timestamp.                        |
+| `name`              | string          | Artist/project name.                          |
+| `location`          | string          | Human-readable location.                      |
+| `genres`            | string[]        | Non-empty; used for search.                   |
+| `bio`               | string          | Plain text.                                   |
+| `contact`           | string \| null  | Optional contact email.                       |
+| `links`             | object[]        | `{ kind, url }`; `kind` from a known set.     |
+| `preview`           | string \| null  | Path to a clip, or `null` ("preview pending").|
+| `releases`          | object[]        | Optional; omit entirely when empty.           |
+
+`owner_note` (an earlier duplicated boilerplate) was removed during
+consolidation — the ownership statement now lives in this README.
+
 ## Contributing
 
 - **Artists:** publish a manifest and ask to be listed, or self-host and share

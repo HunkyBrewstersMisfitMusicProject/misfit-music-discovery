@@ -1,5 +1,5 @@
 {
-  "manifest_version": "0.1.0",
+  "manifest_version": "0.2.0",
   "generated_at": "2026-08-02T00:00:00+00:00",
   "name": "Midnight Circuit",
   "location": "Tokyo, Japan",
@@ -9,6 +9,7 @@
     "electronic"
   ],
   "bio": "Quiet, deep synthwave with smooth sine textures and subtle movement. Late-night city loops.",
+  "contact": "mid@midnightcircuit.jp",
   "links": [
     {
       "kind": "bandcamp",
@@ -19,6 +20,5 @@
       "url": "https://soundcloud.com/midnightcircuit"
     }
   ],
-  "contact": "mid@midnightcircuit.jp",
   "preview": "previews/midnight-circuit.wav"
 }
